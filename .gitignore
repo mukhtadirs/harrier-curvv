@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.pytest_cache/
+.mypy_cache/
+
+# Environments
+venv/
+.venv/
+env/
+.env
+*.env
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Secrets & Keys (do not commit service account keys)
+secrets/**
+keys/**
+sa*.json
+*service*account*.json
+*service*.json
+*credentials*.json
+*_sa.json
+
+# Reports / artifacts
+*.pdf
+*.png
+
+
