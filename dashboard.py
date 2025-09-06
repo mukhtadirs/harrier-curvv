@@ -713,7 +713,7 @@ def main():
             )
     
     # Generate report button
-    if st.button("🔄 Generate Analytics Report", type="primary", width="stretch"):
+    if st.button("🔄 Generate Analytics Report", type="primary", use_container_width=True):
         # Show loading and compute
         with st.spinner("Analyzing selected model(s) data..."):
             dashboards: List[Dict[str, Any]] = []
