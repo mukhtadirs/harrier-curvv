@@ -36,6 +36,18 @@ except Exception:
     # Fall back to GOOGLE_APPLICATION_CREDENTIALS env or ADC without raising here
     pass
 
+# Secondary fallback: if service account JSON is provided via env var, write it to a temp file
+if not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+    sa_json_env = os.getenv("GCP_SERVICE_ACCOUNT_JSON") or os.getenv("BQ_SERVICE_ACCOUNT_JSON")
+    if sa_json_env:
+        try:
+            fd, sa_path = tempfile.mkstemp(suffix=".json")
+            with os.fdopen(fd, "w") as f:
+                f.write(sa_json_env)
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = sa_path
+        except Exception:
+            pass
+
 # Page configuration
 st.set_page_config(
     page_title="TATA EV Analytics Dashboard",
@@ -340,7 +352,7 @@ def create_traffic_funnel(data: Dict[str, Any]):
             showlegend=False
         )
         
-        st.plotly_chart(fig, width="stretch")
+        st.plotly_chart(fig, use_container_width=True)
     
     with col2:
         
@@ -357,7 +369,7 @@ def create_traffic_funnel(data: Dict[str, Any]):
         )
         
         fig.update_layout(height=400)
-        st.plotly_chart(fig, width="stretch")
+        st.plotly_chart(fig, use_container_width=True)
 
 def create_comparison_chart(data: Dict[str, Any]):
     """Create current vs previous period comparison"""
@@ -564,7 +576,7 @@ def create_detailed_table(data: Dict[str, Any]):
     st.dataframe(
         df,
         hide_index=True,
-        width="stretch",
+        use_container_width=True,
     )
 
     # OS breakdown per device category
@@ -589,10 +601,10 @@ def create_detailed_table(data: Dict[str, Any]):
         col1, col2 = st.columns(2)
         with col1:
             st.write("**Mobile**")
-            st.dataframe(os_df[os_df["Device"] == "Mobile"], hide_index=True, width="stretch")
+            st.dataframe(os_df[os_df["Device"] == "Mobile"], hide_index=True, use_container_width=True)
         with col2:
             st.write("**Desktop**")
-            st.dataframe(os_df[os_df["Device"] == "Desktop"], hide_index=True, width="stretch")
+            st.dataframe(os_df[os_df["Device"] == "Desktop"], hide_index=True, use_container_width=True)
     else:
         st.info("No OS breakdown available for this period.")
 
