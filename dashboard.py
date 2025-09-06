@@ -24,20 +24,20 @@ from alert_loader_dropoff import LoaderDropoffMonitor
 # Load environment variables
 load_dotenv()
 
-# Attempt to load GCP creds from Streamlit secrets (preferred on hosted environments)
-try:
-    if hasattr(st, "secrets") and "gcp_service_account" in st.secrets and not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
-        sa_dict = dict(st.secrets["gcp_service_account"])  # Streamlit secrets to dict
-        fd, sa_path = tempfile.mkstemp(suffix=".json")
-        with os.fdopen(fd, "w") as f:
-            json.dump(sa_dict, f)
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = sa_path
-except Exception:
-    # Fall back to GOOGLE_APPLICATION_CREDENTIALS env or ADC without raising here
-    pass
+# Page configuration (must be the first Streamlit command)
+st.set_page_config(
+    page_title="TATA EV Analytics Dashboard",
+    page_icon="🚗",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
-# Secondary fallback: if service account JSON is provided via env var, write it to a temp file
+# Detect Render environment
+IS_RENDER = bool(os.getenv("RENDER") or os.getenv("RENDER_EXTERNAL_HOSTNAME"))
+
+# Attempt to load GCP creds from Streamlit secrets (preferred on hosted environments)
 if not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+    # Prefer JSON via env var (e.g., Render env var secret)
     sa_json_env = os.getenv("GCP_SERVICE_ACCOUNT_JSON") or os.getenv("BQ_SERVICE_ACCOUNT_JSON")
     if sa_json_env:
         try:
@@ -47,14 +47,18 @@ if not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
             os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = sa_path
         except Exception:
             pass
-
-# Page configuration
-st.set_page_config(
-    page_title="TATA EV Analytics Dashboard",
-    page_icon="🚗",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+    # On Streamlit Cloud, read from st.secrets; avoid accessing st.secrets on Render
+    elif not IS_RENDER:
+        try:
+            if hasattr(st, "secrets") and "gcp_service_account" in st.secrets:
+                sa_dict = dict(st.secrets["gcp_service_account"])  # Streamlit secrets to dict
+                fd, sa_path = tempfile.mkstemp(suffix=".json")
+                with os.fdopen(fd, "w") as f:
+                    json.dump(sa_dict, f)
+                os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = sa_path
+        except Exception:
+            # Fall back silently
+            pass
 
 # Color scheme (aligned with dashboard primary blue)
 PRIMARY = "#1f77b4"   # Blue (Streamlit primaryColor)
